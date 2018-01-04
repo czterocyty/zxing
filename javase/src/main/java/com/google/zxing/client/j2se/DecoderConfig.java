@@ -34,6 +34,9 @@ final class DecoderConfig {
       description = "Use the TRY_HARDER hint, default is normal mode")
   boolean tryHarder;
 
+  @Parameter(names = "--try_super_hard")
+  boolean trySuperHard;
+
   @Parameter(names = "--pure_barcode",
       description = "Input image is a pure monochrome barcode image, not a photo")
   boolean pureBarcode;
@@ -78,6 +81,9 @@ final class DecoderConfig {
       help = true)
   boolean help;
 
+  @Parameter(names = "--blur")
+  boolean blur;
+
   @Parameter(description = "(URIs to decode)", required = true, variableArity = true)
   List<String> inputPaths;
 
@@ -116,6 +122,9 @@ final class DecoderConfig {
     }
     if (pureBarcode) {
       hints.put(DecodeHintType.PURE_BARCODE, Boolean.TRUE);
+    }
+    if (trySuperHard) {
+      hints.put(DecodeHintType.TRY_SUPER_HARDER, Boolean.TRUE);
     }
     return Collections.unmodifiableMap(hints);
   }

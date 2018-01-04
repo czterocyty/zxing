@@ -106,10 +106,11 @@ public abstract class OneDReader implements Reader {
     int height = image.getHeight();
     BitArray row = new BitArray(width);
 
+    boolean trySuperHarder = hints != null && hints.containsKey(DecodeHintType.TRY_SUPER_HARDER);
     boolean tryHarder = hints != null && hints.containsKey(DecodeHintType.TRY_HARDER);
-    int rowStep = Math.max(1, height >> (tryHarder ? 8 : 5));
+    int rowStep = trySuperHarder ? 1 : Math.max(1, height >> (tryHarder ? 8 : 5));
     int maxLines;
-    if (tryHarder) {
+    if (tryHarder || trySuperHarder) {
       maxLines = height; // Look at the whole image, not just the center
     } else {
       maxLines = 15; // 15 rows spaced 1/32 apart is roughly the middle half of the image

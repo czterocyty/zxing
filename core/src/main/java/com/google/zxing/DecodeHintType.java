@@ -52,6 +52,8 @@ public enum DecodeHintType {
    */
   TRY_HARDER(Void.class),
 
+  TRY_SUPER_HARDER(Void.class),
+
   /**
    * Specifies what character encoding to use when decoding, where applicable (type String)
    */

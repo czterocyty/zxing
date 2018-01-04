@@ -26,12 +26,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.StreamSupport;
 
 /**
  * This simple command line utility decodes files, directories of files, or URIs which are passed
@@ -83,7 +85,8 @@ public final class CommandLineRunner {
     }
 
     Queue<URI> syncInputs = new ConcurrentLinkedQueue<>(inputs);
-    int numThreads = Math.min(numInputs, Runtime.getRuntime().availableProcessors());
+    // int numThreads = Math.min(numInputs, Runtime.getRuntime().availableProcessors());
+    int numThreads = 1;
     int successful = 0;    
     if (numThreads > 1) {
       ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -99,10 +102,10 @@ public final class CommandLineRunner {
       successful += new DecodeWorker(config, syncInputs).call();
     }
 
-    if (!config.brief && numInputs > 1) {
+//     if (!config.brief && numInputs > 1) {
       System.out.println("\nDecoded " + successful + " files out of " + numInputs +
           " successfully (" + (successful * 100 / numInputs) + "%)\n");
-    }
+//     }
   }
 
   private static List<URI> expand(List<URI> inputs) throws IOException {
@@ -112,9 +115,11 @@ public final class CommandLineRunner {
         Path inputPath = Paths.get(input);
         if (Files.isDirectory(inputPath)) {
           try (DirectoryStream<Path> childPaths = Files.newDirectoryStream(inputPath)) {
-            for (Path childPath : childPaths) {
-              expanded.add(childPath.toUri());
-            }
+              StreamSupport
+                      .stream(childPaths.spliterator(), false)
+                      .sorted(
+                              Comparator.comparing(p -> p.getFileName().toString()))
+                      .forEach(childPath -> expanded.add(childPath.toUri()));
           }
         } else {
           expanded.add(input);
@@ -140,6 +145,8 @@ public final class CommandLineRunner {
         Path inputPath = Paths.get(input);
         retain =
             !inputPath.getFileName().toString().startsWith(".") &&
+                    !inputPath.getFileName().toString().endsWith(".pdf") &&
+                    !inputPath.getFileName().toString().endsWith(".txt") &&
             (recursive || !Files.isDirectory(inputPath));
       } else {
         retain = true;

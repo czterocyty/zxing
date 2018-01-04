@@ -75,6 +75,7 @@ public class FinderPatternFinder {
 
   final FinderPatternInfo find(Map<DecodeHintType,?> hints) throws NotFoundException {
     boolean tryHarder = hints != null && hints.containsKey(DecodeHintType.TRY_HARDER);
+    boolean trySuperHard = hints != null && hints.containsKey(DecodeHintType.TRY_SUPER_HARDER);
     int maxI = image.getHeight();
     int maxJ = image.getWidth();
     // We are looking for black/white/black/white/black modules in
@@ -85,7 +86,7 @@ public class FinderPatternFinder {
     // number of pixels the center could be, so skip this often. When trying harder, look for all
     // QR versions regardless of how dense they are.
     int iSkip = (3 * maxI) / (4 * MAX_MODULES);
-    if (iSkip < MIN_SKIP || tryHarder) {
+    if (iSkip < MIN_SKIP || tryHarder || trySuperHard) {
       iSkip = MIN_SKIP;
     }
 

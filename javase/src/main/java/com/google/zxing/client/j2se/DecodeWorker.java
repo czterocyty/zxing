@@ -27,12 +27,16 @@ import com.google.zxing.client.result.ParsedResult;
 import com.google.zxing.client.result.ResultParser;
 import com.google.zxing.common.BitArray;
 import com.google.zxing.common.BitMatrix;
-import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.common.GlobalHistogramBinarizer;
 import com.google.zxing.multi.GenericMultipleBarcodeReader;
 import com.google.zxing.multi.MultipleBarcodeReader;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ColorModel;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
@@ -116,8 +120,24 @@ final class DecodeWorker implements Callable<Integer> {
     Files.write(buildOutputPath(input, ".txt"), resultTexts, StandardCharsets.UTF_8);
   }
 
+  private BufferedImage blur(BufferedImage original) {
+    float[] matrix = new float[9];
+    Arrays.fill(matrix, 0.111f);
+    BufferedImageOp op = new ConvolveOp(new Kernel(3, 3, matrix));
+    BufferedImage dest = op.createCompatibleDestImage(original, ColorModel.getRGBdefault());
+    op.filter(original, dest);
+    return dest;
+  }
+
   private Result[] decode(URI uri, Map<DecodeHintType,?> hints) throws IOException {
-    BufferedImage image = ImageReader.readImage(uri);
+    BufferedImage image;
+    BufferedImage loaded = ImageReader.readImage(uri);
+
+    if (config.blur) {
+      image = blur(loaded);
+    } else {
+      image = loaded;
+    }
 
     LuminanceSource source;
     if (config.crop == null) {
@@ -128,7 +148,8 @@ final class DecodeWorker implements Callable<Integer> {
           image, crop.get(0), crop.get(1), crop.get(2), crop.get(3));
     }
 
-    BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+    // BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+    BinaryBitmap bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(source));
     if (config.dumpBlackPoint) {
       dumpBlackPoint(uri, image, bitmap);
     }

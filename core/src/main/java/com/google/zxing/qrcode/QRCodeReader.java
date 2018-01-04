@@ -177,7 +177,7 @@ public class QRCodeReader implements Reader {
     int nudgedTooFarDown = top + (int) ((matrixHeight - 1) * moduleSize) - bottom;
     if (nudgedTooFarDown > 0) {
       if (nudgedTooFarDown > nudge) {
-        // Neither way fits; abort
+        // Neither way f its; abort
         throw NotFoundException.getNotFoundInstance();
       }
       top -= nudgedTooFarDown;
